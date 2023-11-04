@@ -78,6 +78,8 @@ while (int(book_name) < 2000):
                 with open(os.path.join(output_folder, f"{book_name}.json"), 'w', encoding='utf-8') as output_file:
                     json.dump(data_of_a_book, output_file, ensure_ascii=False)
                 print(f"데이터가 {book_name} 파일에 저장되었습니다.")
+                driver.quit()
+                driver = webdriver.Chrome() # flush the driver
 
             # new book
             data_of_a_book = {'chn': [], 'kor': []}
