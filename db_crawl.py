@@ -1,11 +1,11 @@
 import os
-import pickle
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import time
 import requests
 
-driver = webdriver.Edge()
+driver = webdriver.Chrome()
 book_name = '0000'
 book_number = '0010'
 chap_number = '000'
@@ -18,6 +18,8 @@ last_trial = False
 output_folder = "output"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
+
+data_of_a_book = {'chn': [], 'kor': []}
 
 while (int(book_name) < 2000):
     str(book_number).zfill(4)
@@ -34,21 +36,10 @@ while (int(book_name) < 2000):
         data_chn = driver.find_element(By.XPATH,
                                        '/html/body/div[2]/section[2]/section[2]/section/div[2]/div[2]/div/div/div[3]').text
 
-        # Create a folder with book_name as the name
-        book_folder = os.path.join(output_folder, book_name)
-        if not os.path.exists(book_folder):
-            os.makedirs(book_folder)
+        # append data to the dictionary
+        data_of_a_book['chn'].append(data_chn)
+        data_of_a_book['kor'].append(data_kor)
 
-        # Save data as pickle files
-        with open(os.path.join(book_folder, f"{book_name}_kor.pkl"), 'wb') as output_file_kor:
-            output_file_kor.write(b'\n')
-            pickle.dump({"data": data_kor}, output_file_kor)
-
-        with open(os.path.join(book_folder, f"{book_name}_chn.pkl"), 'wb') as output_file_chn:
-            output_file_chn.write(b'\n')
-            pickle.dump({"data": data_chn}, output_file_chn)
-
-        print(f"데이터가 {book_name} 폴더에 저장되었습니다.")
         page_num = str(int(page_num) + 10).zfill(4)
         page_trial = False
         chap_trial = False
@@ -80,6 +71,16 @@ while (int(book_name) < 2000):
             depth = 4
             depth_trial = False
         else:
+            # save the data
+            if len(data_of_a_book['chn']) == 0:
+                print(f"{book_name}에 데이터가 없습니다.")
+            else:
+                with open(os.path.join(output_folder, f"{book_name}.json"), 'w', encoding='utf-8') as output_file:
+                    json.dump(data_of_a_book, output_file, ensure_ascii=False)
+                print(f"데이터가 {book_name} 파일에 저장되었습니다.")
+
+            # new book
+            data_of_a_book = {'chn': [], 'kor': []}
             page_num = '0010'
             chap_number = '000'
             book_number = '0010'
