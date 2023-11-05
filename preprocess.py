@@ -137,7 +137,7 @@ for p in tqdm(result_data):
         continue
 
     # data = f"아래는 작업을 설명하는 명령어와 추가 컨텍스트를 제공하는 입력이 짝을 이루는 예제입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 명령어:\n한문을 한국어로 번역하세요.\n\n### 입력:\n{p['chn']}\n\n### 응답:\n{p['kor']}" + tokenizer.eos_token
-    data = f"### 한문: {p['chn']}\n### 한국어: {p['kor']}" + tokenizer.eos_token
+    data = f"### 명령어: 한문을 한국어로 번역하세요.\n### 한문: {p['chn']}\n### 한국어: {p['kor']}" + tokenizer.eos_token
     # data = f"###System;한문을 한국어로 번역하세요.\n###User;{p['chn']}\n###Midm;{p['kor']}"
     dataset['text'].append(data)
 

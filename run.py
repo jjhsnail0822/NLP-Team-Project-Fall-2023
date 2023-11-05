@@ -8,9 +8,9 @@ import pickle
 
 PEFT_ID = "hankor"
 MAX_NEW_TOKENS = 2048
-CONTEXT_CHN = '### 한문: '
+CONTEXT_CHN = '### 명령어: 한문을 한국어로 번역하세요.\n### 한문: '
 SPLIT = '\n### 한국어: '
-PKL_PATH = 'Preprocessed-kullm.pkl'
+PKL_PATH = 'Preprocessed.pkl'
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
