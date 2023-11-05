@@ -1,10 +1,16 @@
-import os
+from konlpy.tag import Okt
+from nltk.translate.bleu_score import sentence_bleu
 import torch
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer
 from peft import PeftConfig, PeftModel
+import pickle
 
 PEFT_ID = "hankor"
 MAX_NEW_TOKENS = 2048
+CONTEXT_CHN = '### 한문: '
+SPLIT = '\n### 한국어: '
+PKL_PATH = 'Preprocessed-kullm.pkl'
 
 bnb_config = BitsAndBytesConfig(
     load_in_4bit=True,
@@ -20,14 +26,14 @@ config = PeftConfig.from_pretrained(PEFT_ID)
 model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, quantization_config=bnb_config, device_map=device)
 model = PeftModel.from_pretrained(model, PEFT_ID)
 tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, skip_special_tokens=True)
-streamer = TextStreamer(tokenizer, skip_prompt=True)
+streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
 model.to(device)
 model.eval()
 model.config.use_cache = True
 
 def translate(user_input):
-    context = f"아래는 작업을 설명하는 명령어와 추가 컨텍스트를 제공하는 입력이 짝을 이루는 예제입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 명령어:\n한문을 한국어로 번역하세요.\n\n### 입력:\n{user_input}\n\n### 응답:\n"
+    context = CONTEXT_CHN + user_input + SPLIT
     print('한국어  > ')
     gened = model.generate(
         **tokenizer(
@@ -49,5 +55,37 @@ def chat():
         if user_input == 'exit':
             break
         gen = translate(user_input)
+
+# calculate BLEU score
+# to be implemented faster
+def calculate_bleu():
+    okt = Okt()
+    with open(PKL_PATH, 'rb') as f:
+        dataset = pickle.load(f)
+    dataset = list(dataset['test']['text'])
+    bleu_score = 0
+    for data in tqdm(dataset):
+        data = data.split(SPLIT)
+        context = data[0]
+        target = data[1].split(tokenizer.eos_token)[0]
+        gened = model.generate(
+            **tokenizer(
+                context + SPLIT, 
+                return_tensors='pt', 
+                return_token_type_ids=False
+            ).to(device),
+            max_new_tokens=MAX_NEW_TOKENS,
+            do_sample=True,
+            eos_token_id=tokenizer.eos_token_id,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+        candidate = tokenizer.decode(gened[0], skip_special_tokens=True).split(SPLIT)[1]
+        target = okt.morphs(target)
+        candidate = okt.morphs(candidate)
+        score = sentence_bleu([target], candidate)
+        print(score)
+        bleu_score += score
+    bleu_score /= len(dataset)
+    print('BLEU score:', bleu_score)
 
 chat()

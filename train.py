@@ -3,7 +3,9 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model, PeftModel
 import pickle
 
-MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
+# pip install torch transformers peft bitsandbytes
+
+MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
 # MODEL_ID = "KT-AI/midm-bitext-S-7B-inst-v1"
 PEFT_ID = "hankor"
 PKL_PATH = "Preprocessed.pkl"
@@ -47,7 +49,7 @@ if __name__ == '__main__':
     model.gradient_checkpointing_enable()
     model = prepare_model_for_kbit_training(model)
 
-# for kullm model
+# for polyglot-ko & kullm model
     config = LoraConfig(
         r=LORA_R,
         lora_alpha=LORA_ALPHA,
@@ -70,6 +72,24 @@ if __name__ == '__main__':
     #         "c_attn",
     #         "c_proj",
     #         "c_fc",
+    #     ],
+    #     lora_dropout=LORA_DROPOUT,
+    #     bias="none",
+    #     task_type="CAUSAL_LM"
+    # )
+
+# for llama-2-kor model
+    # config = LoraConfig(
+    #     r=LORA_R,
+    #     lora_alpha=LORA_ALPHA,
+    #     target_modules=[
+    #         "q_proj",
+    #         "k_proj",
+    #         "v_proj",
+    #         "o_proj",
+    #         "gate_proj",
+    #         "up_proj",
+    #         "down_proj",
     #     ],
     #     lora_dropout=LORA_DROPOUT,
     #     bias="none",
