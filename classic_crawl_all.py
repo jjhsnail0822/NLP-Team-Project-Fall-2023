@@ -2,7 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import os
 import json
-import re
+from tqdm import tqdm
 
 output_folder = "output"
 if not os.path.exists(output_folder):
@@ -30,7 +30,7 @@ for book_url in books_url:
         pages_url.append("http://db.cyberseodang.or.kr" + page.find("a").attrs["href"])
 
     data_of_a_book = {"chn": [], "kor": []}
-    for url in pages_url:
+    for url in tqdm(pages_url):
         url = f"{url}"
         req = requests.get(url, verify=False)
         soup = BeautifulSoup(req.text, "html.parser")
@@ -47,15 +47,15 @@ for book_url in books_url:
             content_chn = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
             if content_chn:
                 data_of_a_book["chn"].append(content_chn)
-                print(content_chn)
+                # print(content_chn)
         select_kor = soup.select("#_content > div.trans_org._bonmun")
         for element in select_kor:
-            for em in element.find_all("em"):
+            for em in element.find_all("em", class_='_chi'):
                 em.extract()
             content_kor = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
             if content_kor:
                 data_of_a_book["kor"].append(content_kor)
-                print(content_kor)
+                # print(content_kor)
     with open(
         os.path.join(output_folder, f"{book_name}.json"), "w", encoding="utf-8"
     ) as output_file:
