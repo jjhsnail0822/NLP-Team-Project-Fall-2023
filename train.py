@@ -5,7 +5,8 @@ import pickle
 
 # pip install torch transformers peft bitsandbytes
 
-MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
+# MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
+MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
 # MODEL_ID = "KT-AI/midm-bitext-S-7B-inst-v1"
 PEFT_ID = "hankor"
 PKL_PATH = "Preprocessed.pkl"
@@ -14,7 +15,7 @@ BATCH_SIZE = 1
 ACC_STEPS = 16
 LEARNING_RATE = 3e-4
 LOGGING_STEPS = 10
-LR_SCHEDULER_TYPE = "cosine"
+LR_SCHEDULER_TYPE = "cosine_with_restarts"
 STEPS = 10000
 LORA_R = 64
 LORA_ALPHA = 128
