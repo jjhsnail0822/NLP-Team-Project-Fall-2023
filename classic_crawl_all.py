@@ -88,6 +88,10 @@ for book_url in books_url:
         print("chn: ", len(data_of_a_book["chn"]))
         print("kor:", len(data_of_a_book["kor"]))
 
+    if len(data_of_a_book["chn"]) == 0 or len(data_of_a_book["kor"]) == 0:
+        print(f"{book_name}에 데이터가 없습니다.")
+        continue
+
     with open(
         os.path.join(output_folder, f"{book_name}.json"), "w", encoding="utf-8"
     ) as output_file:
