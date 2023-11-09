@@ -54,8 +54,11 @@ for book_url in books_url:
         if len(select_chn) == 0 or len(select_kor) == 0:
             continue
 
-        if '문단단위팹핑' in select_chn[0]:
+        if '문단단위팹핑' in select_chn[0]: # 병렬맞춤단위 should also be removed when preprocessing task is implemented
             continue
+
+        templist_chn = []
+        templist_kor = []
 
         # em 태그와 태그 내부의 내용 제거하고 본문만 출력
         for element in select_chn:
@@ -65,7 +68,8 @@ for book_url in books_url:
             for tag in element.find_all(True):
                 del tag["class"]
             content_chn = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
-            data_of_a_book["chn"].append(content_chn)
+            if content_chn:
+                templist_chn.append(content_chn)
 
         for element in select_kor:
             for em in element.find_all("em", class_='_kor'):
@@ -76,8 +80,16 @@ for book_url in books_url:
                 for span in span_elements:
                     span.extract()
             content_kor = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
-            data_of_a_book["kor"].append(content_kor)
-    
+            if content_kor:
+                templist_kor.append(content_kor)
+
+        if len(templist_chn) != len(templist_kor):
+            continue
+
+        # append data to the dictionary
+        data_of_a_book["chn"] += templist_chn
+        data_of_a_book["kor"] += templist_kor
+
     # test
     if len(data_of_a_book["chn"]) != len(data_of_a_book["kor"]):
         print("Error: the number of chinese and korean data are different")
