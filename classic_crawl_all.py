@@ -54,10 +54,8 @@ for book_url in books_url:
         if len(select_chn) == 0 or len(select_kor) == 0:
             continue
 
-        # test
-        if len(select_chn) != len(select_kor):
-            print(select_chn)
-            print(select_kor)
+        if '문단단위팹핑' in select_chn[0]:
+            continue
 
         # em 태그와 태그 내부의 내용 제거하고 본문만 출력
         for element in select_chn:
@@ -86,8 +84,9 @@ for book_url in books_url:
     
     # test
     if len(data_of_a_book["chn"]) != len(data_of_a_book["kor"]):
-        print(len(data_of_a_book["chn"]))
-        print(len(data_of_a_book["kor"]))
+        print("Error: the number of chinese and korean data are different")
+        print("chn: ", len(data_of_a_book["chn"]))
+        print("kor:", len(data_of_a_book["kor"]))
 
     with open(
         os.path.join(output_folder, f"{book_name}.json"), "w", encoding="utf-8"
