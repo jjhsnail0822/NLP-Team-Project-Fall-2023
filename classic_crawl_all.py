@@ -65,9 +65,7 @@ for book_url in books_url:
             for tag in element.find_all(True):
                 del tag["class"]
             content_chn = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
-            if content_chn:
-                data_of_a_book["chn"].append(content_chn)
-                # print(content_chn)
+            data_of_a_book["chn"].append(content_chn)
 
         for element in select_kor:
             for em in element.find_all("em", class_='_kor'):
@@ -78,9 +76,7 @@ for book_url in books_url:
                 for span in span_elements:
                     span.extract()
             content_kor = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
-            if content_kor:
-                data_of_a_book["kor"].append(content_kor)
-                #print(content_kor)
+            data_of_a_book["kor"].append(content_kor)
     
     # test
     if len(data_of_a_book["chn"]) != len(data_of_a_book["kor"]):
