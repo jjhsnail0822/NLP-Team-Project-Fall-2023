@@ -56,7 +56,8 @@ for book_url in books_url:
 
         # test
         if len(select_chn) != len(select_kor):
-            pass
+            print(select_chn)
+            print(select_kor)
 
         # em 태그와 태그 내부의 내용 제거하고 본문만 출력
         for element in select_chn:
@@ -82,6 +83,12 @@ for book_url in books_url:
             if content_kor:
                 data_of_a_book["kor"].append(content_kor)
                 #print(content_kor)
+    
+    # test
+    if len(data_of_a_book["chn"]) != len(data_of_a_book["kor"]):
+        print(len(data_of_a_book["chn"]))
+        print(len(data_of_a_book["kor"]))
+
     with open(
         os.path.join(output_folder, f"{book_name}.json"), "w", encoding="utf-8"
     ) as output_file:
