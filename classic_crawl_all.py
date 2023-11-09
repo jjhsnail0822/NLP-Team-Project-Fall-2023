@@ -3,13 +3,25 @@ from bs4 import BeautifulSoup
 import os
 import json
 from tqdm import tqdm
+import time
+import random
+
+# requests.get() with connection error handling
+def get_request(url, backoff):
+    try:
+        return requests.get(url, verify=False)
+    except Exception as e:
+        print(e)
+        print(f"Retrying in {backoff} seconds...")
+        time.sleep(backoff)
+        return get_request(url, backoff * 2)
 
 output_folder = "output"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
 url = f"http://db.cyberseodang.or.kr/front/main/mainmenu.do?tab=tab1_03"
-req = requests.get(url, verify=False)
+req = get_request(url, backoff=1)
 soup = BeautifulSoup(req.text, "html.parser")
 
 # 책 url 추출
@@ -20,7 +32,7 @@ for book in books:
 
 # 페이지 url 추출
 for book_url in books_url:
-    req = requests.get(book_url, verify=False)
+    req = get_request(book_url, backoff=1)
     soup = BeautifulSoup(req.text, "html.parser")
     book_name = soup.select_one("div.hd_tit > h3").get_text()
     print(book_name)
@@ -31,6 +43,7 @@ for book_url in books_url:
 
     data_of_a_book = {"chn": [], "kor": []}
     for url in tqdm(pages_url):
+        time.sleep(0.2 * random.random()) # sleeps 0 ~ 0.2 seconds
         url = f"{url}"
         req = requests.get(url, verify=False)
         soup = BeautifulSoup(req.text, "html.parser")
@@ -50,7 +63,7 @@ for book_url in books_url:
                 # print(content_chn)
         select_kor = soup.select("#_content > div.trans_org._bonmun")
         for element in select_kor:
-            for em in element.find_all("em", class_='_chi'):
+            for em in element.find_all("em", class_='_kor'):
                 em.extract()
             div_elements = element.find_all('div', class_='juso_trans cw')
             for div in div_elements:
