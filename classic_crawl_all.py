@@ -52,10 +52,15 @@ for book_url in books_url:
         for element in select_kor:
             for em in element.find_all("em", class_='_chi'):
                 em.extract()
+            div_elements = element.find_all('div', class_='juso_trans cw')
+            for div in div_elements:
+                span_elements = div.find_all('span', class_='jhju')
+                for span in span_elements:
+                    span.extract()
             content_kor = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
             if content_kor:
                 data_of_a_book["kor"].append(content_kor)
-                # print(content_kor)
+                #print(content_kor)
     with open(
         os.path.join(output_folder, f"{book_name}.json"), "w", encoding="utf-8"
     ) as output_file:

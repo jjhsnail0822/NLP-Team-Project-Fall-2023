@@ -12,7 +12,7 @@ data_of_a_book = {'chn': [], 'kor': []}
 
 # 특정 부분 선택
 while num<261:
-    url = f'http://db.cyberseodang.or.kr/front/alphaList/BookMain.do?tab=tab1_01&bnCode=jti_1h0601&titleId=C{num}'
+    url = f'http://db.cyberseodang.or.kr/front/sabuList/BookMain.do?bnCode=jti_1h0301&titleId=C42'
     req = requests.get(url, verify=False)
     soup = BeautifulSoup(req.text, 'html.parser')
     select_chn = soup.select('#_content > div.org > div')
@@ -30,12 +30,18 @@ while num<261:
             print(content_chn)
     select_kor = soup.select('#_content > div.trans_org._bonmun')
     for element in select_kor:
-        for em in element.find_all('em'):
+        for em in element.find_all("em", class_='_chi'):
             em.extract()
+        div_elements = element.find_all('div', class_='juso_trans cw')
+        for div in div_elements:
+            span_elements = div.find_all('span', class_='jhju')
+            for span in span_elements:
+                span.extract()
         content_kor = element.get_text(strip=True)  # 태그 내부의 내용만 가져옴
         if content_kor:
-            data_of_a_book['kor'].append(content_kor)
+            data_of_a_book["kor"].append(content_kor)
             print(content_kor)
+
     num+=1
 with open(os.path.join(output_folder, f"맹자집주.json"), 'w', encoding='utf-8') as output_file:
     json.dump(data_of_a_book, output_file, ensure_ascii=False)
