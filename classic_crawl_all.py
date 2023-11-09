@@ -45,7 +45,7 @@ for book_url in books_url:
     for url in tqdm(pages_url):
         time.sleep(0.2 * random.random()) # sleeps 0 ~ 0.2 seconds
         url = f"{url}"
-        req = requests.get(url, verify=False)
+        req = get_request(url, backoff=1)
         soup = BeautifulSoup(req.text, "html.parser")
 
         select_chn = soup.select("#_content > div.org > div")
