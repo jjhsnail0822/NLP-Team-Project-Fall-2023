@@ -49,6 +49,14 @@ for book_url in books_url:
         soup = BeautifulSoup(req.text, "html.parser")
 
         select_chn = soup.select("#_content > div.org > div")
+        select_kor = soup.select("#_content > div.trans_org._bonmun")
+
+        if len(select_chn) == 0 or len(select_kor) == 0:
+            continue
+
+        # test
+        if len(select_chn) != len(select_kor):
+            pass
 
         # em 태그와 태그 내부의 내용 제거하고 본문만 출력
         for element in select_chn:
@@ -61,7 +69,7 @@ for book_url in books_url:
             if content_chn:
                 data_of_a_book["chn"].append(content_chn)
                 # print(content_chn)
-        select_kor = soup.select("#_content > div.trans_org._bonmun")
+
         for element in select_kor:
             for em in element.find_all("em", class_='_kor'):
                 em.extract()
