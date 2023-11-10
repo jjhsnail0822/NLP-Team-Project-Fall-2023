@@ -1,4 +1,6 @@
 from datasets import Dataset
+import hanja
+from hanja import hangul
 import json
 import os
 import pickle
@@ -11,6 +13,7 @@ import unicodedata
 
 PATH_SILOK = r'parsed\\'
 PATH_ITKC = r'itkc\\' # 한국고전종합DB
+PATH_CYBER = r'cyberseodang\\' # 동양고전종합DB
 
 # MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
@@ -53,6 +56,12 @@ SILOK_SUFFIXES = ['太祖康獻大王實錄',
 SILOK_SUFFIXES = '|'.join(SILOK_SUFFIXES) # for regex searching
 CHEONGAN = r'(甲|乙|丙|丁|戊|己|庚|辛|壬|癸)'
 JIJI = r'(子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)'
+
+CYBER_NO_DIRECT_HANJA = ['논어집주.json',
+                         '대학장구.json',
+                         '맹자집주.json',
+                         '중용장구.json',
+                         '추구.json',]
 
 def preprocess_silok():
     def preprocess_chn(text):
@@ -121,9 +130,64 @@ def preprocess_itkc():
 
     return itkc_data
 
+def preprocess_cyber():
+    def preprocess_chn(text):
+        text = re.sub(f'(○|◑|●|◎)', '', text) # remove '○' symbols
+        text = re.sub(f'注\+', ' 注 ', text)
+        text = re.sub(f'^[0-9]+(-|－|\.|‧)?([0-9])*(-|－|\.|‧)?(가([0-9])*|([0-9])*)', '', text) # remove line numbers
+        text = re.sub(r'\n+', '\n', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def preprocess_kor(text):
+        text = re.sub(f'(○|◑|●|◎)', '', text) # remove '○' symbols
+        text = re.sub(f'주\(注\)\+([①-㊿])?', ' 주석: ', text)
+        text = re.sub(f'^[0-9]+(-|－|\.|‧)?([0-9])*(-|－|\.|‧)?(가([0-9])*|([0-9])*)', '', text) # remove line numbers
+        text = re.sub(r'\n+', '\n', text)
+        text = re.sub(r'\s+', ' ', text).strip()
+        return text
+
+    def is_all_hanja(text):
+        for c in text:
+            if not hanja.is_hanja(c):
+                return False
+        return True
+
+    cyber_data = []
+    for filename in os.listdir(PATH_CYBER):
+        with open(os.path.join(PATH_CYBER, filename), 'rb') as f:
+            data = json.load(f)
+            if filename in CYBER_NO_DIRECT_HANJA: # no need to convert hanja to hangul
+                for i in range(len(data['chn'])):
+                    cyber_data.append({'chn': data['chn'][i], 'kor': data['kor'][i]})
+            else:
+                for i in range(len(data['chn'])):
+                    converted_kor = [x for x in hanja.split_hanja(data['kor'][i])]
+                    for j in range(len(converted_kor)):
+                        if not is_all_hanja(converted_kor[j]): # if not all hanja
+                            continue
+                        if j > 0 and j < len(converted_kor) - 1: # if not first or last split
+                            if converted_kor[j-1][-1] == '(' and converted_kor[j+1][0] == ')': # dismiss hanja in parentheses
+                                continue
+                        converted_kor[j] = hanja.translate(converted_kor[j], 'substitution') + '(' + converted_kor[j] + ')'
+                        if j > 0:
+                            if hangul.is_hangul(converted_kor[j-1][-1]) or converted_kor[j-1][-1] in ['.',',','?','!',')',']','〉','》','≫','’','”']:
+                                converted_kor[j] = ' ' + converted_kor[j] # add deleted space before hanja
+                    converted_kor = ''.join(converted_kor)
+                    cyber_data.append({'chn': data['chn'][i], 'kor': converted_kor})
+            print('cyber data loaded from', filename)
+
+    for i in tqdm(range(len(cyber_data))):
+        cyber_data[i]['chn'] = preprocess_chn(cyber_data[i]['chn'])
+        cyber_data[i]['kor'] = preprocess_kor(cyber_data[i]['kor'])
+    
+    return cyber_data
+
 result_data = preprocess_silok()
 itkc_data = preprocess_itkc()
+cyber_data = preprocess_cyber()
 result_data.extend(itkc_data)
+result_data.extend(cyber_data)
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 dataset = {'text': []}
@@ -135,6 +199,8 @@ for p in tqdm(result_data):
     if p['kor'] == '[번역문 없음]' or p['kor'] == '[본문 내용 없음]' or p['chn'] == '[本文缺]': # no translation
         continue
     if len(re.findall(r'[가-힣]', p['chn'])) >= 4: # too many korean characters
+        continue
+    if '《》' in p['chn'] or '、、' in p['chn']: # something wrong
         continue
 
     data = f"아래는 작업을 설명하는 명령어와 추가 컨텍스트를 제공하는 입력이 짝을 이루는 예제입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 명령어:\n한문을 한국어로 번역하세요.\n\n### 입력:\n{p['chn']}\n\n### 응답:\n{p['kor']}" + tokenizer.eos_token
