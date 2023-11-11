@@ -46,6 +46,11 @@ def translate(user_input):
         eos_token_id=tokenizer.eos_token_id,
         pad_token_id=tokenizer.eos_token_id,
         streamer=streamer,
+        temperature=0.9,
+        top_p=0.95,
+        top_k=50,
+        # num_beams=5,
+        no_repeat_ngram_size=3,
     )
     return gened
 
