@@ -14,7 +14,6 @@ import unicodedata
 PATH_SILOK = r'parsed\\'
 PATH_ITKC = r'itkc\\' # 한국고전종합DB
 PATH_CYBER = r'cyberseodang\\' # 동양고전종합DB
-SPLIT = '\n\n### 응답:\n'
 
 # MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
