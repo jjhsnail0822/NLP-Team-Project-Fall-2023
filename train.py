@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model, PeftModel
 import pickle
 
-# pip install torch transformers peft bitsandbytes scipy
+# pip install torch transformers peft bitsandbytes scipy datasets
 # export HF_HOME=/workspace/hf
 
 # MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
