@@ -4,7 +4,11 @@ from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model, Pe
 import pickle
 
 # pip install torch transformers peft bitsandbytes scipy datasets
+# apt update
+# apt install vim
 # export HF_HOME=/workspace/hf
+
+# on A100 80GB, 1 epoch takes about 80 hours, 5000 steps
 
 # MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
@@ -13,8 +17,8 @@ PEFT_ID = "hankor"
 PKL_PATH = "Preprocessed.pkl"
 PAD_TOKEN = "<|unused0|>"
 SPLIT = '\n\n### 응답:\n'
-BATCH_SIZE = 1
-ACC_STEPS = 16
+BATCH_SIZE = 1 # 24 on A100
+ACC_STEPS = 16 # 4 on A100
 LEARNING_RATE = 3e-4
 LOGGING_STEPS = 10
 LR_SCHEDULER_TYPE = "cosine_with_restarts"
@@ -24,6 +28,7 @@ LORA_ALPHA = 128
 LORA_DROPOUT = 0.05
 SAVE_STEPS = 200
 EVAL_STEPS = 200
+WARMUP_STEPS = 200 # 50 on A100
 NUM_WORKERS = 0
 CONTINUE_TRAINING = 0
 
@@ -137,7 +142,7 @@ if __name__ == '__main__':
             gradient_accumulation_steps=ACC_STEPS,
             max_steps=STEPS,
             eval_steps=EVAL_STEPS,
-            warmup_steps=SAVE_STEPS, # 200 was used in koalpaca training
+            warmup_steps=WARMUP_STEPS, # 200 was used in koalpaca training
             learning_rate=LEARNING_RATE,
             bf16=True,
             logging_steps=LOGGING_STEPS,
