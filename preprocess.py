@@ -14,6 +14,7 @@ import unicodedata
 PATH_SILOK = r'parsed\\'
 PATH_ITKC = r'itkc\\' # 한국고전종합DB
 PATH_CYBER = r'cyberseodang\\' # 동양고전종합DB
+SPLIT = '\n\n### 응답:\n'
 
 # MODEL_ID = "EleutherAI/polyglot-ko-5.8b"
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
@@ -215,6 +216,7 @@ dataset['test'] = dataset_eval['test']
 dataset['eval'] = dataset_eval['train']
 
 dataset = dataset.map(lambda x: tokenizer(x["text"], truncation=True, max_length=2048), batched=True)
+dataset = dataset.filter(lambda batch: [x[-1] == tokenizer.eos_token_id for x in batch['input_ids']], batched=True) # remove incomplete data
 
 with open(PKL_PATH, 'wb') as f:
     pickle.dump(dataset, f)

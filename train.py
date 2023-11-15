@@ -23,6 +23,7 @@ LORA_R = 64
 LORA_ALPHA = 128
 LORA_DROPOUT = 0.05
 SAVE_STEPS = 200
+EVAL_STEPS = 200
 NUM_WORKERS = 0
 CONTINUE_TRAINING = 0
 
@@ -117,8 +118,6 @@ if __name__ == '__main__':
                 maskIndex = (labels_seq.unfold(0, self.split_tokens_len, 1) == self.split_tokens).all(dim=1).nonzero().squeeze()
                 if maskIndex.numel() > 0:
                     labels_seq[:maskIndex+self.split_tokens_len] = -100
-                else:
-                    labels_seq[:] = -100
 
             outputs = model(**inputs)
             loss = outputs['loss']
@@ -137,7 +136,7 @@ if __name__ == '__main__':
             evaluation_strategy="steps",
             gradient_accumulation_steps=ACC_STEPS,
             max_steps=STEPS,
-            eval_steps=SAVE_STEPS,
+            eval_steps=EVAL_STEPS,
             warmup_steps=SAVE_STEPS, # 200 was used in koalpaca training
             learning_rate=LEARNING_RATE,
             bf16=True,
