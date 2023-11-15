@@ -3,7 +3,7 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from peft import prepare_model_for_kbit_training, LoraConfig, get_peft_model, PeftModel
 import pickle
 
-# pip install torch transformers peft bitsandbytes scipy datasets
+# pip install torch transformers peft bitsandbytes scipy datasets tensorboard
 # apt update
 # apt install vim
 # export HF_HOME=/workspace/hf
@@ -14,6 +14,7 @@ import pickle
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
 # MODEL_ID = "KT-AI/midm-bitext-S-7B-inst-v1"
 PEFT_ID = "hankor"
+LOGGING_DIR = "hankor/runs"
 PKL_PATH = "Preprocessed.pkl"
 PAD_TOKEN = "<|unused0|>"
 SPLIT = '\n\n### 응답:\n'
@@ -146,6 +147,8 @@ if __name__ == '__main__':
             learning_rate=LEARNING_RATE,
             bf16=True,
             logging_steps=LOGGING_STEPS,
+            logging_dir=LOGGING_DIR,
+            report_to="tensorboard",
             lr_scheduler_type=LR_SCHEDULER_TYPE,
             save_steps=SAVE_STEPS,
             dataloader_num_workers=NUM_WORKERS,
