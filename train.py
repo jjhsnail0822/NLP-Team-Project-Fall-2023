@@ -11,6 +11,7 @@ MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
 PEFT_ID = "hankor"
 PKL_PATH = "Preprocessed.pkl"
 PAD_TOKEN = "<|unused0|>"
+SPLIT = '\n\n### 응답:\n'
 BATCH_SIZE = 1
 ACC_STEPS = 16
 LEARNING_RATE = 3e-4
@@ -104,7 +105,26 @@ if __name__ == '__main__':
 
     tokenizer.pad_token = PAD_TOKEN
 
-    trainer = Trainer(
+    class MaskedTrainer(Trainer):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.split_tokens = torch.Tensor(tokenizer(SPLIT)['input_ids']).to(device)
+            self.split_tokens_len = len(self.split_tokens)
+        
+        def compute_loss(self, model, inputs, return_outputs=False):
+            for labels_seq in inputs['labels']:
+                maskIndex = (labels_seq.unfold(0, self.split_tokens_len, 1) == self.split_tokens).all(dim=1).nonzero().squeeze()
+                if maskIndex.numel() > 0:
+                    labels_seq[:maskIndex+self.split_tokens_len] = -100
+                else:
+                    labels_seq[:] = -100
+
+            outputs = model(**inputs)
+            loss = outputs['loss']
+
+            return (loss,outputs) if return_outputs else loss
+
+    trainer = MaskedTrainer(
         model=model,
         train_dataset=dataset['train'],
         eval_dataset=dataset['eval'],
