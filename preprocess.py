@@ -3,6 +3,7 @@ import hanja
 from hanja import hangul
 import json
 import os
+import pandas as pd
 import pickle
 import re
 from transformers import AutoTokenizer
@@ -208,8 +209,13 @@ for p in tqdm(result_data):
     # data = f"###System;한문을 한국어로 번역하세요.\n###User;{p['chn']}\n###Midm;{p['kor']}"
     dataset['text'].append(data)
 
+# remove duplicates
+dataset = pd.DataFrame(dataset)
+dataset = pd.DataFrame.drop_duplicates(dataset, ignore_index=True)
+dataset = Dataset.from_pandas(dataset, preserve_index=False)
+
 # train, test, validation split
-dataset = Dataset.from_dict(dataset).train_test_split(test_size=0.01)
+dataset = dataset.train_test_split(test_size=0.01)
 dataset_eval = dataset['test'].train_test_split(test_size=0.5)
 dataset['test'] = dataset_eval['test']
 dataset['eval'] = dataset_eval['train']
