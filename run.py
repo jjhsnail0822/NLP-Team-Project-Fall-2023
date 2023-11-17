@@ -91,6 +91,8 @@ def calculate_bleu():
         )
         candidate = tokenizer.decode(gened[0], skip_special_tokens=True).split(SPLIT)[1]
         score = bleu.corpus_score([candidate], [[target]]).score
+        print(target)
+        print(candidate)
         print(score)
         bleu_score += score
         bleu_score_list.append(score)
