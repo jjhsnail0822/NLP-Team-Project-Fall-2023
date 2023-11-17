@@ -1,10 +1,9 @@
-from konlpy.tag import Okt
-from nltk.translate.bleu_score import sentence_bleu
 import torch
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer
 from peft import PeftConfig, PeftModel
 import pickle
+from sacrebleu.metrics import BLEU
 
 PEFT_ID = "hankor"
 MAX_NEW_TOKENS = 2048
@@ -61,14 +60,16 @@ def chat():
             break
         gen = translate(user_input)
 
-# calculate BLEU score
-# to be implemented faster
+# calculate BLEU score of test dataset
+# use sacreBLEU with ko-mecab tokenizer
+# pip install sacrebleu[ko]
 def calculate_bleu():
-    okt = Okt()
     with open(PKL_PATH, 'rb') as f:
         dataset = pickle.load(f)
     dataset = list(dataset['test']['text'])
     bleu_score = 0
+    bleu_score_list = []
+    bleu = BLEU(tokenize='ko-mecab')
     for data in tqdm(dataset):
         data = data.split(SPLIT)
         context = data[0]
@@ -81,16 +82,20 @@ def calculate_bleu():
             ).to(device),
             max_new_tokens=MAX_NEW_TOKENS,
             do_sample=True,
+            temperature=0.9,
+            top_p=0.95,
+            top_k=50,
+            no_repeat_ngram_size=3,
             eos_token_id=tokenizer.eos_token_id,
             pad_token_id=tokenizer.eos_token_id,
         )
         candidate = tokenizer.decode(gened[0], skip_special_tokens=True).split(SPLIT)[1]
-        target = okt.morphs(target)
-        candidate = okt.morphs(candidate)
-        score = sentence_bleu([target], candidate)
+        score = bleu.corpus_score([candidate], [[target]]).score
         print(score)
         bleu_score += score
+        bleu_score_list.append(score)
     bleu_score /= len(dataset)
     print('BLEU score:', bleu_score)
+    return bleu_score_list, bleu_score
 
 chat()
