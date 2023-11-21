@@ -1,33 +1,49 @@
 import torch
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer, GPTQConfig
 from peft import PeftConfig, PeftModel
 import pickle
 from sacrebleu.metrics import BLEU
 
+RUN_GPTQ = False
+RUN_LORA_MERGED_8BIT = False
+
+MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
 PEFT_ID = "hankor"
+QUANTIZED_ID = "hankor-quantized-8bit"
+LORA_MERGED_8BIT_ID = "hankor-lora-merged-8bit"
 MAX_NEW_TOKENS = 2048
 CONTEXT_CHN = '아래는 작업을 설명하는 명령어와 추가 컨텍스트를 제공하는 입력이 짝을 이루는 예제입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 명령어:\n한문을 한국어로 번역하세요.\n\n### 입력:\n'
 SPLIT = '\n\n### 응답:\n'
 PKL_PATH = 'Preprocessed.pkl'
 
-bnb_config = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_use_double_quant=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.bfloat16
-)
-
 device = torch.device("cuda:0" if torch.cuda.is_available() 
-                      else "mps" if torch.backends.mps.is_available()
-                      else "cpu")
-config = PeftConfig.from_pretrained(PEFT_ID)
-model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, quantization_config=bnb_config, device_map=device)
-model = PeftModel.from_pretrained(model, PEFT_ID)
-tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, skip_special_tokens=True)
+                        else "mps" if torch.backends.mps.is_available()
+                        else "cpu")
+
+if RUN_GPTQ:
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    model = AutoModelForCausalLM.from_pretrained(QUANTIZED_ID, device_map='auto')
+    model.to(device)
+elif RUN_LORA_MERGED_8BIT:
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
+    model = AutoModelForCausalLM.from_pretrained(LORA_MERGED_8BIT_ID, device_map='auto')
+else:
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch.bfloat16
+    )
+
+    config = PeftConfig.from_pretrained(PEFT_ID)
+    model = AutoModelForCausalLM.from_pretrained(config.base_model_name_or_path, quantization_config=bnb_config, device_map=device)
+    model = PeftModel.from_pretrained(model, PEFT_ID)
+    tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path, skip_special_tokens=True)
+    model.to(device)
+
 streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
-model.to(device)
 model.eval()
 model.config.use_cache = True
 
@@ -101,3 +117,8 @@ def calculate_bleu():
     return bleu_score_list, bleu_score
 
 chat()
+
+# blist, bscore = calculate_bleu()
+# with open('bleu.pkl', 'wb') as f:
+#     pickle.dump(blist, f)
+# print(bscore)
