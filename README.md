@@ -6,6 +6,8 @@
 
 # Prerequisites
 
+하드웨어 요구 사항 - CUDA 11.8 이상이 설치된 NVIDIA GPU가 필요합니다. VRAM은 최소 8GB 이상 필요하며, 권장 VRAM은 12GB 이상입니다.
+
 ## For Linux
 
 ```
