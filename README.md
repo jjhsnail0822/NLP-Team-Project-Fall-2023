@@ -11,13 +11,13 @@
 ## For Linux
 
 ```
-pip install torch transformers peft bitsandbytes scipy datasets sacrebleu[ko] auto-gptq
+pip install torch transformers peft bitsandbytes scipy datasets sacrebleu[ko] auto-gptq tqdm
 ```
 
 ## For Windows
 
 ```
-pip install torch transformers peft scipy datasets sacrebleu[ko] auto-gptq
+pip install torch transformers peft scipy datasets sacrebleu[ko] auto-gptq tqdm
 ```
 
 Windows 환경에서는 bitsandbytes 패키지가 기본적으로 지원되지 않습니다. 따라서 다음 링크에서 제시하는 방법을 통해 수동으로 설치해야 합니다.
