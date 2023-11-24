@@ -1,16 +1,47 @@
 import torch
 from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer, GPTQConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig, TextStreamer
 from peft import PeftConfig, PeftModel
 import pickle
 from sacrebleu.metrics import BLEU
+import sys
+
+if len(sys.argv) != 2:
+    print('Invalid argument. Please use one of the following arguments:')
+    print('--gptq-8bit')
+    print('--gptq-4bit')
+    print('--lora-merged-8bit')
+    print('--bleu')
+    print('--default')
+    exit()
+arg1 = sys.argv[1]
 
 RUN_GPTQ = False
 RUN_LORA_MERGED_8BIT = False
+CALC_BLEU = False
+
+if arg1 == '--gptq-8bit':
+    RUN_GPTQ = True
+elif arg1 == '--gptq-4bit':
+    RUN_GPTQ = True
+elif arg1 == '--lora-merged-8bit':
+    RUN_LORA_MERGED_8BIT = True
+elif arg1 == '--bleu':
+    CALC_BLEU = True
+elif arg1 == '--default':
+    pass
+else:
+    print('Invalid argument. Please use one of the following arguments:')
+    print('--gptq-8bit')
+    print('--gptq-4bit')
+    print('--lora-merged-8bit')
+    print('--bleu')
+    print('--default')
+    exit()
 
 MODEL_ID = "nlpai-lab/kullm-polyglot-5.8b-v2"
 PEFT_ID = "hankor"
-QUANTIZED_ID = "hankor-quantized-8bit"
+QUANTIZED_ID = "hankor-quantized-8bit" if arg1 == '--gptq-8bit' else "hankor-quantized-4bit"
 LORA_MERGED_8BIT_ID = "hankor-lora-merged-8bit"
 MAX_NEW_TOKENS = 2048
 CONTEXT_CHN = '아래는 작업을 설명하는 명령어와 추가 컨텍스트를 제공하는 입력이 짝을 이루는 예제입니다. 요청을 적절히 완료하는 응답을 작성하세요.\n\n### 명령어:\n한문을 한국어로 번역하세요.\n\n### 입력:\n'
@@ -116,9 +147,10 @@ def calculate_bleu():
     print('BLEU score:', bleu_score)
     return bleu_score_list, bleu_score
 
-chat()
-
-# blist, bscore = calculate_bleu()
-# with open('bleu.pkl', 'wb') as f:
-#     pickle.dump(blist, f)
-# print(bscore)
+if CALC_BLEU:
+    blist, bscore = calculate_bleu()
+    with open('bleu.pkl', 'wb') as f:
+        pickle.dump(blist, f)
+    print(bscore)
+else:
+    chat()
