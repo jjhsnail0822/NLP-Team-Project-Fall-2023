@@ -47,12 +47,15 @@ sacreBLEU를 통해 BLEU 평가를 진행합니다. default 모델의 평가만�
 RTX 4090 환경에서 약 2.6일간 4300 steps, 0.84 epoch를 학습하였습니다.
 
 train/loss
+
 ![image](https://github.com/jjhsnail0822/NLP-Team-Project-Fall-2023/assets/86543294/ce3be6c2-0671-4864-9b18-c0ac8d0aa8c4)
 
 eval/loss
+
 ![image](https://github.com/jjhsnail0822/NLP-Team-Project-Fall-2023/assets/86543294/f7bcbb2f-57ea-4ab5-898b-06e646832e3a)
 
 
 # Evaluation
 default hankor 모델은 sacreBLEU 평가에서 26.53 BLEU를 기록했습니다.
+
 ![image](https://github.com/jjhsnail0822/NLP-Team-Project-Fall-2023/assets/86543294/4ac339e2-1e97-4934-aaa8-6f99b3cb887c)
